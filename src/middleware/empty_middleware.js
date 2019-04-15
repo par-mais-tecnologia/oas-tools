@@ -1,13 +1,15 @@
 'use strict';
 
 const config = require('../configurations'),
-      logger = config.logger;
+  logger = config.logger;
 
-module.exports = (options) => { 
+module.exports = (options) => {
   return (req, res, next) => {
-    if (options != undefined) {
+    if (options !== undefined) {
       logger.debug("<empty_middleware> Router middleware: " + options.controllers);
       config.controllers = options.controllers;
+      config.middlewares = options.middlewares;
+      config.errorHandlers = options.errorHandlers;
     } else {
       logger.debug("<empty_middleware> This does nothing actually.");
     }
