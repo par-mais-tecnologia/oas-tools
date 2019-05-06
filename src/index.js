@@ -49,7 +49,7 @@ function init_checks (specDoc, callback) {
   }
 
   var err = validator.validate(specDoc, schemaV3)
-  if (err == false) {
+  if (err === false) {
     logger.error('Specification file is not valid: ' + JSON.stringify(validator.getLastErrors()))
     process.exit()
   } else {
@@ -63,7 +63,7 @@ function init_checks (specDoc, callback) {
  */
 var configure = function configure (options) {
   config.setConfigurations(options)
-  if (options.customLogger || options.loglevel != undefined) {
+  if (options.customLogger || options.loglevel !== undefined) {
     logger = config.logger //loglevel changes, then new logger is needed
   }
 }
@@ -84,12 +84,12 @@ function checkOperationId (load, pathName, methodName, methodSection) {
     opId = utils.generateName(rawOpId, undefined) //there is opId: just normalize
   }
 
-  if (opId == undefined) {
+  if (opId === undefined) {
     opId = utils.generateName(pathName, 'function') + methodName.toUpperCase() //there is no opId: normalize and add "func" at the beggining
     logger.debug('      There is no operationId for ' + methodName.toUpperCase() + ' - ' + pathName + ' -> generated: ' + opId)
   }
 
-  if (load[opId] == undefined) {
+  if (load[opId] === undefined) {
     logger.error('      There is no function in the controller for ' + methodName.toUpperCase() + ' - ' + pathName + ' (operationId: ' + opId + ')')
     process.exit()
   } else {
@@ -110,19 +110,30 @@ function checkControllers (pathName, methodName, methodSection, controllersLocat
   var load
   var router_property
 
-  if (methodSection['x-router-controller'] != undefined) {
+  if (methodSection['x-router-controller'] !== undefined) {
     router_property = 'x-router-controller'
-  } else if (methodSection['x-swagger-router-controller'] != undefined) {
+  } else if (methodSection['x-swagger-router-controller'] !== undefined) {
     router_property = 'x-swagger-router-controller'
   } else {
     router_property = undefined
   }
 
-  if (methodSection[router_property] != undefined) {
+  if (methodSection[router_property] !== undefined) {
     controller = methodSection[router_property]
     logger.debug('    OAS-doc has ' + router_property + ' property')
+
+    let ctrlLocation
+
     try {
-      load = require(pathModule.join(controllersLocation, utils.generateName(controller, undefined)))
+      if (Array.isArray(controllersLocation)) {
+        const ctrlRegex = new RegExp(controller + '.js$')
+
+        ctrlLocation = controllersLocation.find((location) => ctrlRegex.test(location))
+        load = require(pathModule.join(ctrlLocation.replace(ctrlRegex, ''), utils.generateName(`${controller}.js`, undefined)))
+      } else {
+        load = require(pathModule.join(controllersLocation, utils.generateName(controller, undefined)))
+      }
+
       checkOperationId(load, pathName, methodName, methodSection)
     } catch (err) {
       logger.error(err)
@@ -163,7 +174,7 @@ var getExpressVersion = function (oasPath) {
  */
 function appendBasePath (specDoc, expressPath) {
   var res
-  if (specDoc.servers != undefined) {
+  if (specDoc.servers !== undefined) {
     var specServer = specDoc.servers[0].url
     var url = specServer.split('/')
 
@@ -193,17 +204,17 @@ function appendBasePath (specDoc, expressPath) {
 
 function extendGrants (specDoc, grantsFile) {
   var newGrants = {}
-  Object.keys(grantsFile).forEach(role => {
+  Object.keys(grantsFile).forEach((role) => {
     newGrants[role] = {}
-    Object.keys(grantsFile[role]).forEach(resource => {
+    Object.keys(grantsFile[role]).forEach((resource) => {
       if (resource !== '$extend') {
         var grants = grantsFile[role][resource]
         var splitRes = resource.split('/')
-        Object.keys(specDoc.paths).forEach(specPath => {
+        Object.keys(specDoc.paths).forEach((specPath) => {
           var found = true
           var pos = -1
           var splitPath = specPath.split('/')
-          splitRes.forEach(resPart => {
+          splitRes.forEach((resPart) => {
             var foundPos = splitPath.indexOf(resPart)
             if (!found || foundPos <= pos) {
               found = false
@@ -322,11 +333,11 @@ function registerPaths (specDoc, app) {
 
   let load = require(config.middlewares)
 
-  if (specDoc['x-parmais-middlewares'] !== undefined) {
+  if (specDoc['x-middlewares'] !== undefined) {
     try {
-      specDoc['x-parmais-middlewares']
+      specDoc['x-middlewares']
         .forEach((middleware) => {
-          app.use('/', load[middleware])
+          app.use(load[middleware])
         })
     } catch (err) {
       logger.error(err)
@@ -337,9 +348,9 @@ function registerPaths (specDoc, app) {
   var paths = specDoc.paths
   var allowedMethods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
   for (var path in paths) {
-    if (paths[path]['x-parmais-middlewares'] !== undefined) {
+    if (paths[path]['x-middlewares'] !== undefined) {
       try {
-        paths[path]['x-parmais-middlewares']
+        paths[path]['x-middlewares']
           .forEach((middleware) => {
             app.use(path, load[middleware])
           })
@@ -355,9 +366,9 @@ function registerPaths (specDoc, app) {
         dictionary[expressPath.toString()] = path
         logger.debug('Register: ' + method.toUpperCase() + ' - ' + expressPath)
 
-        if (paths[path][method]['x-parmais-middlewares'] !== undefined) {
+        if (paths[path][method]['x-middlewares'] !== undefined) {
           try {
-            paths[path][method]['x-parmais-middlewares']
+            paths[path][method]['x-middlewares']
               .forEach((middleware) => {
                 app[method](expressPath, load[middleware])
               })
@@ -367,20 +378,20 @@ function registerPaths (specDoc, app) {
           }
         }
 
-        if (config.router == true && config.checkControllers == true) {
+        if (config.router === true && config.checkControllers === true) {
           checkControllers(path, method, paths[path][method], config.controllers)
         }
         expressPath = appendBasePath(specDoc, expressPath)
-        if (config.oasSecurity == true) {
+        if (config.oasSecurity === true) {
           app[method](expressPath, OASSecurityMid())
         }
-        if (config.oasAuth == true) {
+        if (config.oasAuth === true) {
           app[method](expressPath, OASAuthMid())
         }
-        if (config.validator == true) {
+        if (config.validator === true) {
           app[method](expressPath, OASValidatorMid())
         }
-        if (config.router == true) {
+        if (config.router === true) {
           app[method](expressPath, OASRouterMid())
         }
       }
