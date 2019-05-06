@@ -123,7 +123,7 @@ function checkRequestData(oasDoc, requestedSpecPath, method, res, req, next) { /
           data = addFilesToJSONPropertyValidation(req.files, data);
         }
         var err = validator.validate(data, validSchema);
-        if (err == false) {
+        if (err === false) {
           newErr = {
             message: "Wrong data in the body of the request. ",
             error: validator.getLastErrors(),
@@ -149,14 +149,14 @@ function checkRequestData(oasDoc, requestedSpecPath, method, res, req, next) { /
 
       //TODO: 'required' property is not required, some parameters may not have it (those in query for example)
 
-      if (params[i].required != undefined && params[i].required.toString() == 'true') { //TODO: in case it is not required...there is no validation?
+      if (params[i].required !== undefined && params[i].required.toString() === 'true') { //TODO: in case it is not required...there is no validation?
         var name = params[i].name;
         var location = params[i].in;
         var schema = params[i].schema;
         var value;
 
         location = locationFormat(location);
-        if (req[location][name] == undefined) { //if the request is missing a required parameter acording to the oasDoc: warning
+        if (req[location][name] === undefined) { //if the request is missing a required parameter acording to the oasDoc: warning
           newErr = {
             message: "Missing parameter " + name + " in " + location + ". "
           };
@@ -169,9 +169,9 @@ function checkRequestData(oasDoc, requestedSpecPath, method, res, req, next) { /
             value = String(req[location][name]);
           }
           err = validator.validate(value, schema);
-          if (err == false) {  // eslint-disable-line
+          if (err === false) {  // eslint-disable-line
             keepGoing = false;
-            if (err.code == "UNKNOWN_FORMAT") { // eslint-disable-line
+            if (err.code === "UNKNOWN_FORMAT") { // eslint-disable-line
               var registeredFormats = ZSchema.getRegisteredFormats();
               logger.error("UNKNOWN_FORMAT error - Registered Formats: ");
               logger.error(registeredFormats);
@@ -188,11 +188,11 @@ function checkRequestData(oasDoc, requestedSpecPath, method, res, req, next) { /
       }
     }
   }
-  if (keepGoing == false && config.strict == true) {
+  if (keepGoing === false && config.strict === true) {
     logger.error(JSON.stringify(msg));
     res.status(400).send(msg);
   } else {
-    if (msg.length != 0) {
+    if (msg.length !== 0) {
       logger.warning(JSON.stringify(msg));
     }
     res.locals.oasDoc = oasDoc;
@@ -405,11 +405,11 @@ module.exports = (oasDoc) => {
     var methodParameters = oasDoc.paths[requestedSpecPath][method].parameters || [];
     var pathParameters = oasDoc.paths[requestedSpecPath].parameters || [];
     var parameters = filterParams(methodParameters, pathParameters);
-    if (parameters != undefined) {
+    if (parameters !== undefined) {
       parameters.forEach((parameter) => { // TODO: para POST y PUT el objeto se define en 'requestBody' y no en 'parameters'
         var pType = getParameterType(parameter);
         var oVal = getParameterValue(req, parameter);
-        var value = convertValue(oVal, parameter.schema == undefined ? parameter : parameter.schema, pType);
+        var value = convertValue(oVal, parameter.schema === undefined ? parameter : parameter.schema, pType);
 
         req.swagger.params[parameter.name] = {
           path: "/some/path", //this shows the path to follow on the spec file to get to the parameter but oas-tools doesn't use it!
@@ -421,7 +421,7 @@ module.exports = (oasDoc) => {
     }
 
     var requestBody = oasDoc.paths[requestedSpecPath][method].requestBody;
-    if (requestBody != undefined) {
+    if (requestBody !== undefined) {
       // when and endpoint provides a file upload option and other properties, 
       // the content type changes to multipart/form-data
       // other requestBody types such as "image/png" are allowed as well
