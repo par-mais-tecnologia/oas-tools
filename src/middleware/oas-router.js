@@ -60,7 +60,7 @@ function checkResponse (req, res, oldSend, oasDoc, method, requestedSpecPath, co
   var data = content[0]
   logger.debug('Processing at checkResponse:')
   logger.debug('  -code: ' + code)
-  // logger.debug('  -oasDoc: ' + JSON.stringify(oasDoc))
+  logger.debug('  -oasDoc: ' + JSON.stringify(oasDoc))
   logger.debug('  -method: ' + method)
   logger.debug('  -requestedSpecPath: ' + requestedSpecPath)
   logger.debug('  -data: ' + JSON.stringify(data))
