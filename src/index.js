@@ -348,11 +348,12 @@ function registerPaths (specDoc, app) {
   var paths = specDoc.paths
   var allowedMethods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
   for (var path in paths) {
+    var expressPath = getExpressVersion(path) // TODO: take in account basePath/servers property of the spec doc.
     if (paths[path]['x-middlewares'] !== undefined) {
       try {
         paths[path]['x-middlewares']
           .forEach((middleware) => {
-            app.use(path, load[middleware])
+            app.use(expressPath, load[middleware])
           })
       } catch (err) {
         logger.error(err)
@@ -362,7 +363,6 @@ function registerPaths (specDoc, app) {
 
     for (var method in paths[path]) {
       if (allowedMethods.includes(method)) {
-        var expressPath = getExpressVersion(path) // TODO: take in account basePath/servers property of the spec doc.
         dictionary[expressPath.toString()] = path
         logger.debug('Register: ' + method.toUpperCase() + ' - ' + expressPath)
 
