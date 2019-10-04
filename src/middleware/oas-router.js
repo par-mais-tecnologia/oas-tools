@@ -204,7 +204,7 @@ module.exports = (controllers) => {
 
     try {
       if (Array.isArray(controllers)) {
-        const ctrlRegex = new RegExp(controllerName)
+        const ctrlRegex = new RegExp('/' + controllerName)
         const targetController = controllers.find((ctrl) => ctrlRegex.test(ctrl))
 
         controller = require(targetController)

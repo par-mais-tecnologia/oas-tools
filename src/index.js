@@ -126,7 +126,7 @@ function checkControllers (pathName, methodName, methodSection, controllersLocat
 
     try {
       if (Array.isArray(controllersLocation)) {
-        const ctrlRegex = new RegExp(controller + '.js$')
+        const ctrlRegex = new RegExp('/' + controller + '.js$')
 
         ctrlLocation = controllersLocation.find((location) => ctrlRegex.test(location))
         load = require(pathModule.join(ctrlLocation.replace(ctrlRegex, ''), utils.generateName(`${controller}.js`, undefined)))
