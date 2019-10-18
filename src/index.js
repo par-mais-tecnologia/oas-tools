@@ -333,11 +333,13 @@ function registerPaths (specDoc, app) {
 
   let load = require(config.middlewares)
 
+  const registerPathLevelMiddleware = registerHandler((args) => app.use(...args), load)
+
   if (specDoc['x-middlewares'] !== undefined) {
     try {
       specDoc['x-middlewares']
         .forEach((middleware) => {
-          app.use(load[middleware])
+          registerPathLevelMiddleware(undefined, middleware)
         })
     } catch (err) {
       logger.error(err)
@@ -346,14 +348,14 @@ function registerPaths (specDoc, app) {
   }
 
   var paths = specDoc.paths
-  var allowedMethods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
+  var allowedMethods = [ 'get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace' ]
   for (var path in paths) {
     var expressPath = getExpressVersion(path) // TODO: take in account basePath/servers property of the spec doc.
     if (paths[path]['x-middlewares'] !== undefined) {
       try {
         paths[path]['x-middlewares']
           .forEach((middleware) => {
-            app.use(expressPath, load[middleware])
+            registerPathLevelMiddleware(expressPath, middleware)
           })
       } catch (err) {
         logger.error(err)
@@ -368,9 +370,10 @@ function registerPaths (specDoc, app) {
 
         if (paths[path][method]['x-middlewares'] !== undefined) {
           try {
+            const registerMethodLevelMiddleware = registerHandler((args) => app[method](...args), load)
             paths[path][method]['x-middlewares']
               .forEach((middleware) => {
-                app[method](expressPath, load[middleware])
+                registerMethodLevelMiddleware(expressPath, middleware)
               })
           } catch (err) {
             logger.error(err)
@@ -426,6 +429,20 @@ function registerPaths (specDoc, app) {
   config.pathsDict = dictionary
 }
 
+function registerHandler (registerFn, loader) {
+  return (path, handler) => {
+    let middleware
+
+    if (typeof handler === 'object') {
+      middleware = loader[handler.name](handler.args)
+    } else {
+      middleware = loader[handler]
+    }
+
+    registerFn([ ...(path ? [ path ] : []), middleware ])
+  }
+}
+
 /**
  * Function to initialize OAS-tools middlewares.
  *@param {object} oasDoc - Specification file.
@@ -477,5 +494,5 @@ module.exports = {
   init_checks: init_checks,
   initialize: initialize,
   initializeMiddleware: initializeMiddleware,
-  configure: configure,
+  configure: configure
 }
