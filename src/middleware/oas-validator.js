@@ -124,13 +124,29 @@ function checkRequestData(oasDoc, requestedSpecPath, method, res, req, next) { /
         }
         var err = validator.validate(data, validSchema);
         if (err === false) {
-          newErr = {
-            message: "Wrong data in the body of the request. ",
-            error: validator.getLastErrors(),
-            content: data
-          };
-          msg.push(newErr);
-          keepGoing = false;
+          var originalErrors = validator.getLastErrors()
+          var keptErrors = []
+          for(let errorIndex in originalErrors) {
+            if (
+              !( originalErrors[errorIndex].code === 'INVALID_TYPE'
+                && originalErrors[errorIndex].params[1] === 'null'
+                && originalErrors[errorIndex][Symbol.for("z-schema/schema")].nullable
+              )
+            ) {
+              keptErrors.push(originalErrors[errorIndex])
+            }
+          }
+          if(keptErrors.length) {
+            newErr = {
+              message: "Wrong data in the body of the request. ",
+              error: keptErrors,
+              content: data
+            };
+            msg.push(newErr);
+            keepGoing = false;
+          } else {
+            logger.info("Valid parameter on request");
+          }
         } else {
           logger.info("Valid parameter on request");
         }
